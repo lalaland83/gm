@@ -16,12 +16,142 @@
     .chain-link:hover {
         text-decoration: underline;
     }
+body.dark-mode {
+    background-color: #121212;
+    color: white;
+}
+
+.dark-mode .chain-link {
+    color: white;
+}
+
+.dark-mode button {
+    background-color: #333;
+    color: white;
+    border: 1px solid white;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    content: "🌙";
+    position: absolute;
+    left: 4px;
+    top: -2px;
+    font-size: 16px;
+    transition: 0.4s;
+}
+
+.slider:after {
+    content: "🌞";
+    position: absolute;
+    right: 4px;
+    top: 0px;
+    font-size: 16px;
+    transition: 0.4s;
+    opacity: 0;
+}
+
+input:checked + .slider:before {
+    left: 26px;
+    opacity: 0;
+}
+
+input:checked + .slider:after {
+    opacity: 1;
+}
+
+body:not(.dark-mode) .theme-button {
+    background-color: #ff9800;
+    color: white;
+}
+
+body.dark-mode .theme-button {
+    background-color: #333;
+    color: #fff;
+}
+
+
+#headerContainer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Abstand zwischen Switch und Button */
+}
+
+#walletContainer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px; /* Abstand zwischen Button, Switch und Text */
+    min-height: 80px; /* Hält die Höhe konstant */
+}
+
+#headerControls {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Abstand zwischen Wallet-Button und Switch */
+}
+
+#connectWallet {
+    min-width: 160px; /* Verhindert das Stauchen des Buttons */
+    padding: 8px 12px;
+}
+
+#walletAddress {
+    min-height: 20px; /* Stellt sicher, dass sich der Platz für den Text nicht verändert */
+    text-align: right;
+}
+
+
 </style>
 </head>
 <body>
+
     <h2>GM Multi-Chain Sender</h2>
-    <button onclick="connectWallet()">🦊 Connect Wallet</button>
+
+<div id="walletContainer">
+    <div id="headerControls">
+        <button id="connectWallet" onclick="connectWallet()">🦊 Connect Wallet</button>
+        <label class="switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
     <p id="walletAddress">Not connected</p>
+</div>
+
+
+
+
     
     <div id="chainsContainer"></div>
      	
@@ -45,19 +175,30 @@
         };
         const abi = ["function sayGM()"];
         
-        async function connectWallet() {
-            if (!window.ethereum) {
-                document.getElementById("walletAddress").innerText = "❌ MetaMask not found!";
-                return;
-            }
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            signer = provider.getSigner();
-            
-            const address = await signer.getAddress();
-            document.getElementById("walletAddress").innerText = `✅ Connected: ${address}`;
-            await renderChainButtons();
-        }
+async function connectWallet() {
+    if (!window.ethereum) {
+        document.getElementById("walletAddress").innerText = "❌ MetaMask not found!";
+        return;
+    }
+    
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    const accounts = await provider.send("eth_requestAccounts", []);
+    
+    if (accounts.length === 0) {
+        document.getElementById("walletAddress").innerText = "❌ No account connected";
+        return;
+    }
+    
+    signer = provider.getSigner();
+    const address = await signer.getAddress();
+    
+    document.getElementById("walletAddress").innerText = `✅ Connected: ${address}`;
+    document.getElementById("connectWallet").innerText = "Disconnect";
+    document.getElementById("connectWallet").onclick = disconnectWallet;
+
+    localStorage.setItem("walletConnected", "true"); 
+    await renderChainButtons();
+}
         
         async function renderChainButtons() {
             const container = document.getElementById("chainsContainer");
@@ -134,6 +275,137 @@
                 }, 1000);
             });
         }
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+    const isDarkMode = document.body.classList.contains("dark-mode");
+    localStorage.setItem("darkMode", isDarkMode ? "enabled" : "disabled");
+    document.getElementById("darkModeToggle").checked = isDarkMode;
+}
+
+async function disconnectWallet() {
+    document.getElementById("walletAddress").innerText = "Not connected";
+    document.getElementById("connectWallet").innerText = "🦊 Connect Wallet";
+    document.getElementById("connectWallet").onclick = connectWallet;
+
+    // 🌓 **Dark Mode Status sichern**
+    const isDarkMode = localStorage.getItem("darkMode") === "enabled";
+
+    // **Nur Wallet-Daten löschen, Dark Mode behalten**
+    Object.keys(localStorage).forEach(key => {
+        if (key !== "darkMode") localStorage.removeItem(key);
+    });
+
+    // **Dark Mode erneut setzen, falls er aktiv war**
+    if (isDarkMode) {
+        localStorage.setItem("darkMode", "enabled");
+        document.body.classList.add("dark-mode");
+    } else {
+        document.body.classList.remove("dark-mode");
+    }
+
+    // **MetaMask Disconnect (falls unterstützt)**
+    if (window.ethereum && window.ethereum.disconnect) {
+        try {
+            await window.ethereum.disconnect();
+            console.log("MetaMask session disconnected.");
+        } catch (err) {
+            console.error("Error disconnecting MetaMask:", err);
+        }
+    }
+
+    // **Ethereum-Provider hard reset**
+    signer = null;
+    provider = null;
+    if (typeof window.ethereum !== "undefined") {
+        window.ethereum.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] })
+            .then(() => console.log("Wallet permissions revoked."))
+            .catch((err) => console.error("Error revoking permissions:", err));
+    }
+
+    // Buttons für GM deaktivieren
+    document.querySelectorAll("[id^='gmButton-']").forEach(button => {
+        button.innerText = "⏳ Connect wallet first";
+        button.disabled = true;
+        button.onclick = null;
+    });
+
+    console.log("Wallet disconnected.");
+}
+
+
+
+
+
+
+
+
+
+async function renderChainButtons() {
+    const container = document.getElementById("chainsContainer");
+    container.innerHTML = "";
+
+    for (const chainId in contracts) {
+        const chain = contracts[chainId];
+        const addressLink = chain.explorer.replace('/tx/', '/address/') + chain.address;
+        const chainDiv = document.createElement("div");
+
+        chainDiv.innerHTML = `
+            <p><strong><a href="${addressLink}" target="_blank" class="chain-link">${chain.name}</a></strong></p>
+            <button onclick="handleButtonClick(${chainId})" id="gmButton-${chainId}" disabled>⏳ Connect Wallet</button>
+            <span id="status-${chainId}">Waiting for action...</span>
+        `;
+        container.appendChild(chainDiv);
+    }
+
+    // Falls Wallet verbunden ist, Buttons aktivieren
+    if (signer) {
+        await checkCurrentChain();
+    }
+}
+
+async function initializePage() {
+    // Dark Mode prüfen und aktivieren
+    const isDarkMode = localStorage.getItem("darkMode") === "enabled";
+    if (isDarkMode) {
+        document.body.classList.add("dark-mode");
+    }
+    document.getElementById("darkModeToggle").checked = isDarkMode;
+
+    // UI direkt anzeigen, bevor Wallet geprüft wird
+    await renderChainButtons();
+
+    // Wallet-Verbindung prüfen
+    if (window.ethereum) {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        const accounts = await provider.listAccounts();
+
+        if (accounts.length > 0) {
+            signer = provider.getSigner();
+            const address = await signer.getAddress();
+            document.getElementById("walletAddress").innerText = `✅ Connected: ${address}`;
+            document.getElementById("connectWallet").innerText = "Disconnect";
+            localStorage.setItem("walletConnected", "true");
+
+            // Buttons jetzt aktivieren
+            await checkCurrentChain();
+        } else {
+            document.getElementById("walletAddress").innerText = "Not connected";
+            document.getElementById("connectWallet").innerText = "🦊 Connect Wallet";
+            localStorage.removeItem("walletConnected");
+        }
+    } else {
+        document.getElementById("walletAddress").innerText = "❌ MetaMask not found!";
+    }
+}
+
+// Direkt bei Seitenaufruf ausführen
+window.onload = initializePage;
+
+
+// Event Listener für Dark Mode Toggle
+document.getElementById("darkModeToggle").addEventListener("change", toggleDarkMode);
+
     </script>
 </body>
 </html>
