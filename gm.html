@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GM Multi-Chain Sender</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+    .chain-link {
+        color: black;
+        text-decoration: none;
+    }
+    .chain-link:visited {
+        color: black;
+    }
+    .chain-link:hover {
+        text-decoration: underline;
+    }
+</style>
 </head>
 <body>
     <h2>GM Multi-Chain Sender</h2>
@@ -53,9 +65,10 @@
             
             for (const chainId in contracts) {
                 const chain = contracts[chainId];
+                const addressLink = chain.explorer.replace('/tx/', '/address/') + chain.address;
                 const chainDiv = document.createElement("div");
                 chainDiv.innerHTML = `
-                    <p><strong>${chain.name}</strong></p>
+                    <p><strong><a href="${addressLink}" target="_blank" class="chain-link">${chain.name}</a></strong></p>
                     <button onclick="handleButtonClick(${chainId})" id="gmButton-${chainId}" disabled>⏳ Checking chain...</button>
                     <span id="status-${chainId}">Waiting for action...</span>
                 `;
