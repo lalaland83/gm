@@ -132,11 +132,76 @@ body.dark-mode .theme-button {
 }
 
 
+.title-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Abstand zwischen Titel und Icon */
+}
+
+/* Tooltip-Container */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 18px; /* Größe des Icons */
+}
+
+/* Tooltip-Text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 500px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 5px;
+    
+    /* Position über dem Icon */
+    position: absolute;
+    z-index: 1;
+    top: 150%;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Kleiner Pfeil */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+}
+
+/* Tooltip anzeigen, wenn Maus drüber fährt */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
 </style>
 </head>
 <body>
 
+<div class="title-container">
     <h2>GM Multi-Chain Sender</h2>
+    <div class="tooltip">
+        ❓
+        <span class="tooltiptext">The site was built to quickly carry out daily activities on various blockchains.<br><br>
+A TX is sent to a smart contract and a GM event is triggered.<br><br>
+Nothing is logged and so far it has no further use apart from the activity.<br><br>
+The smart contract can be checked by clicking on the blockchain name.<br><br>
+It was built to use as little gas as possible.
+</span>
+    </div>
+</div>
 
 <div id="walletContainer">
     <div id="headerControls">
@@ -149,10 +214,6 @@ body.dark-mode .theme-button {
     <p id="walletAddress">Not connected</p>
 </div>
 
-
-
-
-    
     <div id="chainsContainer"></div>
      	
     <script>
