@@ -192,13 +192,16 @@ body.dark-mode .theme-button {
 
 <div class="title-container">
     <h2>GM Multi-Chain Sender</h2>
-    <div class="tooltip">
+    <div class="tooltip" onclick="copyToClipboard()">
         ❓
         <span class="tooltiptext">The site was built to quickly carry out daily activities on various blockchains.<br><br>
 A TX is sent to a smart contract and a GM event is triggered.<br><br>
 Nothing is logged and so far it has no further use apart from the activity.<br><br>
 The smart contract can be checked by clicking on the blockchain name.<br><br>
-It was built to use as little gas as possible.
+It was built to use as little gas as possible.<br><br>
+If you find it helpful, feel free to donate anything.<br>
+0xb5e64c26ac0C85a2853603711254d6Ec51A1B1B0<br>
+(Address is copied when you click on the ?)
 </span>
     </div>
 </div>
@@ -473,6 +476,16 @@ window.onload = initializePage;
 
 // Event Listener für Dark Mode Toggle
 document.getElementById("darkModeToggle").addEventListener("change", toggleDarkMode);
+
+function copyToClipboard() {
+    const address = "0xb5e64c26ac0C85a2853603711254d6Ec51A1B1B0";
+    navigator.clipboard.writeText(address).then(() => {
+        alert("Address copied to clipboard!");
+    }).catch(err => {
+        console.error("Failed to copy: ", err);
+    });
+}
+
 
     </script>
 </body>
